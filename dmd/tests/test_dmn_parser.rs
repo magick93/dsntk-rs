@@ -21,6 +21,9 @@ mod tests {
                     if text.starts_with("---") && metadata.is_empty() {
                         // This is the YAML front matter
                         metadata.push_str(&text);
+                    } else if text.starts_with("---") && !metadata.is_empty() {
+                        // Skip the closing YAML delimiter
+                        continue;
                     } else {
                         body.push_str(&text);
                         body.push('\n');
@@ -128,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_acyclic_dependencies() {
-        let manifest_path = "../examples/dmn-manifest.yaml";
+        let manifest_path = "examples/dmn-manifest.yaml";
         let manifest = fs::read_to_string(manifest_path).unwrap();
         
         // Parse manifest and build dependency graph

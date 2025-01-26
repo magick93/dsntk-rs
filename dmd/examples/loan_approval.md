@@ -2,10 +2,10 @@
 dmn:
   id: D1
   requires:
-    - ../checks/income.md#thresholds
-    - ../inputs/credit_score.md
+    - checks/income.md#thresholds
+    - inputs/credit_score.md
   outputs:
-    - ../api/approval_service.md
+    - api/approval_service.md
 ---
 
 # Loan Approval Decision
