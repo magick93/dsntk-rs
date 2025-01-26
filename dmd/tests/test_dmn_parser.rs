@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn test_happy_path_parsing() {
-        let path = "./examples/loan_approval.md";
+        let path = "examples/loan_approval.md";
         let (metadata, _) = parse_markdown_file(path);
         
         assert!(metadata.contains_key("dmn"));
@@ -73,14 +73,17 @@ mod tests {
             .filter_map(|v| v.as_str())
             .collect::<Vec<&str>>();
             
-        assert!(requires.contains(&"../checks/income.md#thresholds"));
-        assert!(requires.contains(&"../inputs/credit_score.md"));
+        assert!(requires.contains(&"checks/income.md#thresholds"));
+        assert!(requires.contains(&"inputs/credit_score.md"));
     }
 
     #[test]
     fn test_metadata_presence() {
         let files = [
-            "examples/loan_approval.md"
+            "examples/loan_approval.md",
+            "examples/checks/income.md",
+            "examples/inputs/credit_score.md",
+            "examples/api/approval_service.md"
         ];
         
         for file in files {
@@ -94,18 +97,18 @@ mod tests {
     #[test]
     fn test_link_validation() {
         let files = [
-            ("../examples/loan_approval.md", vec![
-                "../checks/income.md",
-                "../inputs/credit_score.md"
+            ("examples/loan_approval.md", vec![
+                "checks/income.md",
+                "inputs/credit_score.md"
             ]),
-            ("../examples/checks/income.md", vec![
-                "../loan_approval.md"
+            ("examples/checks/income.md", vec![
+                "loan_approval.md"
             ]),
-            ("../examples/inputs/credit_score.md", vec![
-                "../loan_approval.md"
+            ("examples/inputs/credit_score.md", vec![
+                "loan_approval.md"
             ]),
-            ("../examples/api/approval_service.md", vec![
-                "../loan_approval.md"
+            ("examples/api/approval_service.md", vec![
+                "loan_approval.md"
             ])
         ];
         
