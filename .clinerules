@@ -1,0 +1,421 @@
+<html><head></head><body><h1>Architectural Design: DMN as a Directed Acyclic Graph (DAG) Modeled in Markdown</h1>
+<p><strong>Version</strong>: 1.0<br>
+<strong>Audience</strong>: Rust Developers, LLM Agents<br>
+<strong>Objective</strong>: Provide a Rust-friendly reference for implementing a Markdown-based DMN DAG, highlighting unit tests and integration with <a href="https://github.com/DecisionToolkit/dsntk-rs">dsntk-rs</a>.</p>
+<hr>
+<h2><strong>1. Purpose</strong></h2>
+<p>This document explains how to model DMN (Decision Model and Notation) as a Directed Acyclic Graph (DAG) using Markdown as the authoring format. We aim to:</p>
+<ol>
+<li>Offer a human-readable, Git-friendly Markdown format for DMN logic.</li>
+<li>Leverage filesystem structure and hyperlinks to represent DMN's node dependencies.</li>
+<li>Automate validation and testing of DMN constraints (like acyclicity and type consistency) via Rust.</li>
+<li>Integrate with <strong>dsntk-rs</strong> for creating and manipulating DMN artifacts.</li>
+</ol>
+<hr>
+<h2><strong>2. User Story</strong></h2>
+<p><em>As a</em> business analyst or developer,
+<em>I want to</em> write DMN logic in Markdown with clear dependencies,
+<em>So that</em> I can collaborate using familiar Git-based tools,
+<em>While ensuring</em> the model respects DMN graph semantics and can export to engines like Camunda.</p>
+<hr>
+<h2><strong>3. DMN as a Directed Acyclic Graph (DAG)</strong></h2>
+<h3><strong>3.1 DAG Fundamentals</strong></h3>
+<ul>
+<li><strong>Nodes</strong>: Represents DMN constructs (Decisions, Inputs, Knowledge Sources).</li>
+<li><strong>Edges</strong>: Data dependencies ("requires", "outputs to").</li>
+<li><strong>Acyclic</strong>: No circular dependencies among decisions.</li>
+</ul>
+<p>Example visualization with Mermaid:</p>
+<pre><code class="language-mermaid">graph TD
+  A[Loan Approval] --&gt; B[Income Check]
+  A --&gt; C[Credit Score]
+  B --&gt; D[Income Data]
+  C --&gt; E[Credit Bureau API]
+</code></pre>
+<h3><strong>3.2 Traditional DMN Challenges</strong></h3>
+<ul>
+<li>XML-based DMN can obscure the decision graph structure.</li>
+<li>Proprietary editors limit collaborative editing.</li>
+<li>Binary or verbose files hamper version control.</li>
+</ul>
+<hr>
+<h2><strong>4. Markdown DAG Implementation</strong></h2>
+<h3><strong>4.1 Graph Modeling Mechanism</strong></h3>
+
+Concept | Markdown Implementation | Example
+-- | -- | --
+Nodes | Files with YAML front matter | decisions/loan_approval.md
+Edges | Links referencing other files | [Income Check](#income-sub)
+Metadata | Front matter key-value pairs | id: D1, requires: [D2]
+External Nodes | URL references | [ECB Rates](https://example.com)
+
+
+<h3><strong>7.2 Sample Rust Test Case</strong></h3>
+<p><strong>File</strong>: <code>tests/test_loan_approval.rs</code></p>
+<pre><code class="language-rust">#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::load_markdown;
+    use crate::validator::validate_dag;
+
+    #[test]
+    fn test_loan_approval_happy_path() {
+        // Arrange
+        let nodes = load_markdown("fixtures/loan_approval").unwrap();
+
+        // Act
+        let violations = validate_dag(&amp;nodes);
+
+        // Assert
+        assert!(violations.is_empty(), "Expected no DAG violations, found some.");
+        // Additional checks...
+    }
+}
+</code></pre>
+<p>This test verifies:</p>
+<ol>
+<li><strong>No cycles</strong> in the references.</li>
+<li><strong>All required metadata</strong> is present.</li>
+<li><strong>No broken links</strong>.</li>
+</ol>
+<h3><strong>7.3 Test Automation</strong></h3>
+<p>Typical Rust projects integrate tests via Cargo:</p>
+<pre><code class="language-mermaid">graph TB
+  Commit --&gt;|Triggers| CI[CI Pipeline]
+  CI --&gt; Test[Run `cargo test`]
+  Test --&gt; Report[Generate Test Report]
+  Report --&gt; Notify[Slack/Email]
+</code></pre>
+<ol>
+<li><code>cargo test</code>: Run local test suite.</li>
+<li>CI pipeline triggers tests on every commit.</li>
+<li>Reports or logs highlight potential violations.</li>
+</ol>
+<hr>
+<h2><strong>8. Roadmap</strong></h2>
+<h3><strong>Phase 1: Core Validation</strong></h3>
+<ol>
+<li>Implement Markdown → DAG parser.</li>
+<li>Enforce acyclic dependencies.</li>
+<li>Check for broken links and missing fields.</li>
+</ol>
+<h3><strong>Phase 2: DMN Engine Integration</strong></h3>
+<ol>
+<li><strong>Integrate</strong> dsntk-rs for detailed DMN validations and transformations.</li>
+<li>Generate DMN XML.</li>
+<li>Integrate with Camunda/Kogito.</li>
+</ol>
+<h3><strong>Phase 3: Advanced Features</strong></h3>
+<ol>
+<li>Validate FEEL expressions.</li>
+<li>Enforce DMN hit policies.</li>
+</ol>
+<hr>
+<h2><strong>9. Conclusion</strong></h2>
+<p>This Rust-centric architecture promotes:</p>
+<ol>
+<li><strong>Collaborative DMN Development</strong> via Markdown and Git.</li>
+<li><strong>Semantic Rigor</strong> through DAG validation.</li>
+<li><strong>Extensibility</strong> for advanced DMN features.</li>
+</ol>
+<p><strong>Trade-offs</strong>:</p>
+<ul>
+<li>The Markdown approach might not cover all DMN features.</li>
+<li>Requires custom tooling to convert from Markdown to DMN XML.</li>
+</ul>
+<hr>
+<p><strong>Next Steps for Rust Engineers</strong>:</p>
+<ol>
+<li>Create data structures for storing DMN metadata.</li>
+<li>Implement the parser to build a directed graph (e.g., using <code>petgraph</code>).</li>
+<li>Map the parsed results to dsntk-rs data types for deeper DMN support.</li>
+<li>Develop a thorough unit test suite covering all categories from Section 7.</li>
+<li>Set up a CI pipeline with <code>cargo test</code> for automatic validation.</li>
+</ol>
+<p><strong>LLM Instructions</strong>:
+Leverage this doc to generate tasks. Emphasize test-first development: implement minimal features, then expand unit tests for coverage.</p></body></html># Architectural Design: DMN as a Directed Acyclic Graph (DAG) Modeled in Markdown
+
+**Version**: 1.0  
+**Audience**: Rust Developers, LLM Agents  
+**Objective**: Provide a Rust-friendly reference for implementing a Markdown-based DMN DAG, highlighting unit tests and integration with [[dsntk-rs](https://github.com/DecisionToolkit/dsntk-rs)](https://github.com/DecisionToolkit/dsntk-rs).
+
+---
+
+## **1. Purpose**
+
+This document explains how to model DMN (Decision Model and Notation) as a Directed Acyclic Graph (DAG) using Markdown as the authoring format. We aim to:
+
+1. Offer a human-readable, Git-friendly Markdown format for DMN logic.
+2. Leverage filesystem structure and hyperlinks to represent DMN's node dependencies.
+3. Automate validation and testing of DMN constraints (like acyclicity and type consistency) via Rust.
+4. Integrate with **dsntk-rs** for creating and manipulating DMN artifacts.
+
+---
+
+## **2. User Story**
+
+*As a* business analyst or developer,
+*I want to* write DMN logic in Markdown with clear dependencies,
+*So that* I can collaborate using familiar Git-based tools,
+*While ensuring* the model respects DMN graph semantics and can export to engines like Camunda.
+
+---
+
+## **3. DMN as a Directed Acyclic Graph (DAG)**
+
+### **3.1 DAG Fundamentals**
+- **Nodes**: Represents DMN constructs (Decisions, Inputs, Knowledge Sources).
+- **Edges**: Data dependencies ("requires", "outputs to").
+- **Acyclic**: No circular dependencies among decisions.
+
+Example visualization with Mermaid:
+
+```mermaid
+graph TD
+  A[Loan Approval] --> B[Income Check]
+  A --> C[Credit Score]
+  B --> D[Income Data]
+  C --> E[Credit Bureau API]
+```
+
+### **3.2 Traditional DMN Challenges**
+- XML-based DMN can obscure the decision graph structure.
+- Proprietary editors limit collaborative editing.
+- Binary or verbose files hamper version control.
+
+---
+
+## **4. Markdown DAG Implementation**
+
+### **4.1 Graph Modeling Mechanism**
+| Concept            | Markdown Implementation         | Example                          |
+|--------------------|---------------------------------|-----------------------------------|
+| **Nodes**          | Files with YAML front matter    | `decisions/loan_approval.md`      |
+| **Edges**          | Links referencing other files   | `[Income Check](#income-sub)`     |
+| **Metadata**       | Front matter key-value pairs    | `id: D1, requires: [D2]`          |
+| **External Nodes** | URL references                  | `[ECB Rates](https://example.com)` |
+
+### **4.2 Example: Decision Node with DAG Edges**
+
+```markdown
+# decisions/loan_approval.md
+---
+dmn:
+  id: D1
+  requires:
+    - ../checks/income.md#thresholds
+    - ../inputs/credit_score.md
+  outputs:
+    - ../api/approval_service.md
+---
+
+## Rules
+| Income ≥ | Credit ≥ | Outcome  |
+|----------|----------|----------|
+| 50,000   | 700      | Approved |
+```
+
+---
+
+## **5. Implementation Strategy**
+
+### **5.1 Authoring Format Specification**
+1. **File Structure**
+   ```bash
+dmn/
+  ├── decisions/           # Decision nodes
+  ├── inputs/              # Input data nodes
+  ├── knowledge/           # Business knowledge nodes
+  └── dmn-manifest.yaml    # Global references
+```
+
+2. **Link Semantics**
+   ```markdown
+   [Link Text](path/to/target.md#anchor)
+   ```
+   - Relative paths are recommended.
+   - The `#anchor` corresponds to the target file's YAML `id` or a specific section.
+
+### **5.2 Validation Requirements**
+1. **Acyclic Enforcement**
+   > We need to ensure that references among files do not create cycles. In Rust, you can use crates like [[petgraph](https://crates.io/crates/petgraph)](https://crates.io/crates/petgraph) to model and check for cycles. Or rely on dsntk-rs utility methods if available.
+
+2. **Type Consistency**
+   > Ensure that the output types from upstream decisions match the expected input types of downstream decisions.
+
+---
+
+## **6. Toolchain Components**
+
+### **6.1 Core Architecture**
+
+```mermaid
+graph LR
+  A[Markdown Files] --> B[Parser]
+  B --> C[Validation Engine]
+  C --> D[DMN XML Generator]
+  D --> E[Camunda/Kogito]
+  C --> F[Visualization]
+```
+
+1. **Markdown Files**: The `.md` decision documents with front matter.
+2. **Parser**: A Rust-based parser that reads file metadata (e.g., using `serde` and `serde_yaml` or a front matter library) and constructs an in-memory graph.
+3. **Validation Engine**: Checks for DAG properties, type consistency, and missing references.
+4. **DMN XML Generator**: Optionally exports the validated graph to DMN XML for external engines.
+5. **Visualization**: Could be a Rust utility or external tool to depict relationships.
+
+### **6.2 Data Structures (in Rust)**
+```rust
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct DmnMetadata {
+    pub id: String,
+    pub requires: Option<Vec<String>>,
+    pub outputs: Option<Vec<String>>,
+}
+
+// Each file's parsed result
+#[derive(Debug)]
+pub struct DmnNode {
+    pub file_path: String,
+    pub metadata: DmnMetadata,
+}
+```
+
+### **6.3 Integration with [dsntk-rs](https://github.com/DecisionToolkit/dsntk-rs)**
+
+The [dsntk-rs](https://github.com/DecisionToolkit/dsntk-rs) library provides DMN data models and utilities for building, validating, and executing decision logic in Rust. After parsing the Markdown-based DAG into in-memory `DmnNode` structures:
+
+1. **Map** each `DmnNode` to the appropriate `dsntk` data structure (e.g., `Decision`, `DecisionTable`, etc.).
+2. **Assemble** these mapped items into the library's graph or model.
+3. **Leverage** dsntk-rs to handle further validations, run-time evaluations, or DMN transformations.
+4. **Extend** or adapt the pipeline to round-trip from Markdown to DMN XML if needed.
+
+Below is a conceptual snippet:
+
+```rust
+use dsntk::model::{Decision, DecisionTable};
+
+fn map_to_dsntk(dmn_node: &DmnNode) -> Decision {
+    // Example mapping from our custom structure to dsntk-rs
+    Decision {
+        // Fields set according to dmn_node metadata
+        name: dmn_node.metadata.id.clone(),
+        // Additional fields that might require deeper mapping
+        decision_table: Some(DecisionTable {
+            // ... fill in structure from Markdown tables
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+```
+
+By maintaining a clean separation between the Markdown parser and dsntk-rs models, you can easily test your DAG logic in isolation, then rely on dsntk-rs for deeper DMN compliance.
+
+---
+
+## **7. Testing Approach**
+
+### **7.1 Unit Test Scope**
+
+| Test Category       | Description                                                   |
+|---------------------|---------------------------------------------------------------|
+| **Happy Path**      | Valid DAG with standard references.                          |
+| **Edge Cases**      | Large graphs, external URL references, missing metadata.     |
+| **Invalid Models**  | Cyclic dependencies, broken links, inconsistent types.       |
+| **Idempotency**     | Markdown → DMN XML → Markdown roundtrip ensures consistency. |
+
+### **7.2 Sample Rust Test Case**
+
+**File**: `tests/test_loan_approval.rs`
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::load_markdown;
+    use crate::validator::validate_dag;
+
+    #[test]
+    fn test_loan_approval_happy_path() {
+        // Arrange
+        let nodes = load_markdown("fixtures/loan_approval").unwrap();
+
+        // Act
+        let violations = validate_dag(&nodes);
+
+        // Assert
+        assert!(violations.is_empty(), "Expected no DAG violations, found some.");
+        // Additional checks...
+    }
+}
+```
+
+This test verifies:
+1. **No cycles** in the references.
+2. **All required metadata** is present.
+3. **No broken links**.
+
+### **7.3 Test Automation**
+
+Typical Rust projects integrate tests via Cargo:
+
+```mermaid
+graph TB
+  Commit -->|Triggers| CI[CI Pipeline]
+  CI --> Test[Run `cargo test`]
+  Test --> Report[Generate Test Report]
+  Report --> Notify[Slack/Email]
+```
+
+1. `cargo test`: Run local test suite.
+2. CI pipeline triggers tests on every commit.
+3. Reports or logs highlight potential violations.
+
+---
+
+## **8. Roadmap**
+
+### **Phase 1: Core Validation**
+1. Implement Markdown → DAG parser.
+2. Enforce acyclic dependencies.
+3. Check for broken links and missing fields.
+
+### **Phase 2: DMN Engine Integration**
+1. **Integrate** dsntk-rs for detailed DMN validations and transformations.
+2. Generate DMN XML.
+3. Integrate with Camunda/Kogito.
+
+### **Phase 3: Advanced Features**
+1. Validate FEEL expressions.
+2. Enforce DMN hit policies.
+
+---
+
+## **9. Conclusion**
+
+This Rust-centric architecture promotes:
+1. **Collaborative DMN Development** via Markdown and Git.
+2. **Semantic Rigor** through DAG validation.
+3. **Extensibility** for advanced DMN features.
+
+**Trade-offs**:
+- The Markdown approach might not cover all DMN features.
+- Requires custom tooling to convert from Markdown to DMN XML.
+
+---
+
+**Next Steps for Rust Engineers**:
+1. Create data structures for storing DMN metadata.
+2. Implement the parser to build a directed graph (e.g., using `petgraph`).
+3. Map the parsed results to dsntk-rs data types for deeper DMN support.
+4. Develop a thorough unit test suite covering all categories from Section 7.
+5. Set up a CI pipeline with `cargo test` for automatic validation.
+
+**LLM Instructions**:
+Leverage this doc to generate tasks. Emphasize test-first development: implement minimal features, then expand unit tests for coverage.
+
+# Out of scope
+Do not edit any projects, crates or files not in the `dmd` folder. 
