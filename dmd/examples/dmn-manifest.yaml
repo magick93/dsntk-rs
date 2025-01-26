@@ -1,0 +1,34 @@
+# DMN Example Manifest
+version: 1.0
+description: Example DMN DAG for Loan Approval Process
+nodes:
+  - id: D1
+    type: decision
+    file: loan_approval.md
+    description: Main loan approval decision
+    dependencies:
+      - D2
+      - D3
+    outputs:
+      - D4
+
+  - id: D2
+    type: decision
+    file: checks/income.md
+    description: Income verification rules
+    outputs:
+      - D1
+
+  - id: D3
+    type: input
+    file: inputs/credit_score.md
+    description: Credit score input data
+    outputs:
+      - D1
+
+  - id: D4
+    type: service
+    file: api/approval_service.md
+    description: Approval service API
+    dependencies:
+      - D1
